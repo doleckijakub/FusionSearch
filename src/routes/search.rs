@@ -15,8 +15,19 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
 
     let query = Query::from(&mut request);
 
-    duckduckgo::search(&query);
+    let search_results = duckduckgo::search(&query).await;
 
     HttpResponse::Ok()
-        .body(format!("{}", query.query))
+        .body(
+            search_results
+            .into_iter()
+            .map(|result| {
+                format!(r"<div><a href='{url}'>{title}</a><br/><small>{snippet}</small></div>",
+                    url = result.url,
+                    title = result.title,
+                    snippet = result.snippet
+                )
+            })
+            .collect::<String>()
+        )
 }

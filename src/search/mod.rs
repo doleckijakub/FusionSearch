@@ -6,14 +6,14 @@ pub mod engines;
 
 pub type ActixQueryWrapper = ActixQuery<HashMap<String, String>>;
 
-#[derive(Debug)]
 pub struct Query {
     pub query: String
 }
     
-#[derive(Debug)]
 pub struct SearchResult {
-    url: String
+    pub url: String,
+    pub title: String,
+    pub snippet: String
 }
 
 impl From<&mut ActixQueryWrapper> for Query {
