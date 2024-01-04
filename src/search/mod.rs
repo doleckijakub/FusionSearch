@@ -100,9 +100,57 @@ use rand::prelude::SliceRandom;
 
 const WINDOW_DURATION: Duration = Duration::from_secs(20);
 const MAX_REQUESTS_PER_WINDOW: u32 = 15;
+const CACHE_DURATION: Duration = Duration::from_secs(3600);
+
+use std::collections::VecDeque;
+use std::hash::Hash;
+
+struct Cache<K: Eq + Hash + Clone, V> {
+    queue: VecDeque<(K, Instant, V)>,
+    map: HashMap<K, usize>,
+}
+
+impl<K: Eq + Hash + Clone, V> Cache<K, V> {
+    fn new() -> Self {
+        Self { queue: VecDeque::new(), map: HashMap::new() }
+    }
+
+    fn update(&mut self) {
+        let now = Instant::now();
+        
+        while self.queue.front().is_some() && self.queue.front().unwrap().1 > now {
+            let (key, _, _) = self.queue.pop_front().unwrap();
+            self.map.remove(&key);
+        }
+    }
+
+    fn put(&mut self, key: K, value: V) {
+        self.update();
+        self.queue.push_back((key.clone(), Instant::now() + CACHE_DURATION, value));
+        self.map.insert(key, self.queue.len() - 1);
+    }
+
+    fn get(&self, key: K) -> Option<&V> {
+        if let Some(n) = self.map.get(&key) {
+            if let Some((_, _, v)) = self.queue.get(*n) {
+                return Some(v);
+            }
+        }
+        None
+    }
+}
+
+lazy_static::lazy_static! {
+    static ref CACHE: Mutex<Cache<String, String>> = Mutex::new(Cache::new());
+}
 
 pub async fn http_get_text(url: &str) -> Result<String, Error> {
     let url = Url::parse(&url).map_err(|_err| Error::UrlParseError)?;
+
+    if let Some(cached) = CACHE.lock().unwrap().get(url.as_str().to_string()) {
+        println!("Accessing \"{url}\" from cache...");
+        return Ok(cached.to_string())
+    }
 
     let too_many_requests = {
         let host: String = url.host_str().unwrap().into();
@@ -131,6 +179,8 @@ pub async fn http_get_text(url: &str) -> Result<String, Error> {
         .text()
         .await
         .map_err(|_err| Error::ReadError)?;
+
+    CACHE.lock().unwrap().put(url.as_str().to_string(), text.clone());
 
     Ok(text)
 }
