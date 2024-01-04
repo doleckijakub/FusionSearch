@@ -22,7 +22,7 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
             search_results
             .into_iter()
             .map(|result| {
-                format!(r"<div><a href='{url}'>{title}</a><br/><small>{snippet}</small></div>",
+                format!(crate::include_static!("html/snippets/result.html"),
                     url = result.url,
                     title = result.title,
                     snippet = result.snippet

@@ -7,6 +7,13 @@ mod search;
 
 use actix_web::{web, App, HttpServer};
 
+#[macro_export]
+macro_rules! include_static {
+    ($file:expr) => {
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/static/", $file))
+    };
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
 	HttpServer::new(|| {
