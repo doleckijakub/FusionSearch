@@ -15,7 +15,7 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
 
     let query = Query::from(&mut request);
 
-    let search_results = duckduckgo::search(&query).await;
+    let search_results = duckduckgo::search(&query).await.unwrap_or_default();
 
     HttpResponse::Ok()
         .body(
