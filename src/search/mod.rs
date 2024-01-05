@@ -8,6 +8,7 @@ pub type ActixQueryWrapper = ActixQuery<HashMap<String, String>>;
 
 // Query
 
+#[derive(Clone)]
 pub struct Query {
     pub query: String,
 }
@@ -27,7 +28,8 @@ impl From<&mut ActixQueryWrapper> for Query {
 }
 
 // SearchResult
-    
+
+#[derive(Debug)]
 pub struct SearchResult {
     pub url: String,
     pub title: String,
@@ -36,6 +38,7 @@ pub struct SearchResult {
 
 // Error
 
+#[derive(Debug)]
 pub enum Error {
     // UrlParseError,
     // TooManyRequestsInWindow,
