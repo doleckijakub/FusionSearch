@@ -1,7 +1,9 @@
-use actix_web::web::Query as ActixQuery;
-
 pub mod engines;
 
+// Actix query wrapper
+
+use actix_web::web::Query as ActixQuery;
+use std::collections::HashMap;
 pub type ActixQueryWrapper = ActixQuery<HashMap<String, String>>;
 
 // Query
@@ -37,21 +39,15 @@ pub struct SearchResult {
 // Error
 
 pub enum Error {
-    UrlParseError,
-    TooManyRequestsInWindow,
+    // UrlParseError,
+    // TooManyRequestsInWindow,
     SendError,
     ReadError,
 }
 
-// http_get_text
+// sliding windows
 
-use url::Url;
-use reqwest::Client;
-use std::collections::HashMap;
-use std::time::{Duration, Instant};
-use std::sync::Mutex;
-
-struct HostAccessCount {
+/* struct HostAccessCount {
     count: u32,
     expiration: Instant,
 }
@@ -85,18 +81,8 @@ impl SlidingWindow {
 }
 
 lazy_static::lazy_static! {
-    static ref HTTP_CLIENT: Client = Client::new();
     static ref SLIDING_WINDOWS: Mutex<HashMap<String, SlidingWindow>> = Mutex::new(HashMap::new());
-    static ref BROWSER_USER_AGENTS: [reqwest::header::HeaderValue; 5] = [
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.9999.99 Safari/537.36",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/99.0.9999.99 Safari/605.1.15",
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.9999.99 Safari/537.36",
-        "Mozilla/5.0 (X11; Linux x86_64; rv:99.0) Gecko/20100101 Firefox/99.0",
-    ].map(|user_agent| user_agent.parse::<_>().unwrap());
 }
-
-use rand::prelude::SliceRandom;
 
 const WINDOW_DURATION: Duration = Duration::from_secs(20);
 const MAX_REQUESTS_PER_WINDOW: u32 = 15;
@@ -142,10 +128,28 @@ impl<K: Eq + Hash + Clone, V> Cache<K, V> {
 
 lazy_static::lazy_static! {
     static ref CACHE: Mutex<Cache<String, String>> = Mutex::new(Cache::new());
+} */
+
+// user agents
+
+use rand::prelude::SliceRandom;
+lazy_static::lazy_static! {
+    static ref BROWSER_USER_AGENTS: [reqwest::header::HeaderValue; 5] = [
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.9999.99 Safari/537.36",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/99.0.9999.99 Safari/605.1.15",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.9999.99 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64; rv:99.0) Gecko/20100101 Firefox/99.0",
+    ].map(|user_agent| user_agent.parse::<_>().unwrap());
 }
 
-pub async fn http_get_text(url: &str) -> Result<String, Error> {
-    let url = Url::parse(&url).map_err(|_err| Error::UrlParseError)?;
+// http get
+
+use reqwest::RequestBuilder;
+
+pub async fn http_get_text(request: RequestBuilder) -> Result<String, Error> {
+    // TODO: reimplement caching
+    /* let url = Url::parse(&url).map_err(|_err| Error::UrlParseError)?;
 
     if let Some(cached) = CACHE.lock().unwrap().get(url.as_str().to_string()) {
         println!("Accessing \"{url}\" from cache...");
@@ -165,12 +169,11 @@ pub async fn http_get_text(url: &str) -> Result<String, Error> {
 
     if too_many_requests {
         return Err(Error::TooManyRequestsInWindow);
-    }
+    } */
 
     let user_agent = BROWSER_USER_AGENTS
         .choose(&mut rand::thread_rng()).unwrap();
-    let response = HTTP_CLIENT
-        .get(url.as_str())
+    let response = request
         .header(reqwest::header::USER_AGENT, user_agent)
         .send()
         .await
@@ -180,7 +183,7 @@ pub async fn http_get_text(url: &str) -> Result<String, Error> {
         .await
         .map_err(|_err| Error::ReadError)?;
 
-    CACHE.lock().unwrap().put(url.as_str().to_string(), text.clone());
+    // CACHE.lock().unwrap().put(url.as_str().to_string(), text.clone());
 
     Ok(text)
 }
