@@ -1,7 +1,8 @@
 use crate::search::{
     Query, ActixQueryWrapper, http_get_text,
     engines::{
-        lite_duckduckgo_com
+        lite_duckduckgo_com,
+        bing_com
     }
 };
 
@@ -21,9 +22,9 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
 
     let search_results = {
         let query = Query::from(&mut request);
-        let request = lite_duckduckgo_com::request(Client::new(), &query);
+        let request = /* lite_duckduckgo_com*/ bing_com::request(Client::new(), &query);
         if let Ok(response) = http_get_text(request).await {
-            lite_duckduckgo_com::search_results(&response)
+            /* lite_duckduckgo_com */ bing_com::search_results(&response)
         } else {
             vec![]
         }
