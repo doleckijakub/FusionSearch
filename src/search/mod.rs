@@ -8,8 +8,6 @@ pub type ActixQueryWrapper = ActixQuery<HashMap<String, String>>;
 
 // Query
 
-use log::info;
-
 pub struct Query {
     pub query: String,
 }
@@ -19,7 +17,7 @@ impl From<&mut ActixQueryWrapper> for Query {
         let query = request.remove("q").unwrap();
 
         if !request.is_empty() {
-            info!("Unparsed request parameters: {:?}", request.keys());
+            println!("Unparsed request parameters: {:?}", request.keys());
         }
 
         Query {
