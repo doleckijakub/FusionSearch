@@ -132,9 +132,11 @@ lazy_static::lazy_static! {
 
 // user agents
 
+use reqwest::header::HeaderValue;
 use rand::prelude::SliceRandom;
+
 lazy_static::lazy_static! {
-    static ref BROWSER_USER_AGENTS: [reqwest::header::HeaderValue; 5] = [
+    static ref BROWSER_USER_AGENTS: [HeaderValue; 5] = [
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.9999.99 Safari/537.36",
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0",
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/99.0.9999.99 Safari/605.1.15",
@@ -143,12 +145,86 @@ lazy_static::lazy_static! {
     ].map(|user_agent| user_agent.parse::<_>().unwrap());
 }
 
+// cache
+
+mod cache {
+
+    use crate::search::Error;
+    use reqwest::{RequestBuilder, header::HeaderValue};
+    use std::io::Write;
+
+    const CACHE_DIR: Option<&str> = std::option_env!("CACHE_DIR");
+
+    pub async fn get_or_send(request: RequestBuilder, random_user_agent: &HeaderValue) -> Result<String, Error> {
+        async fn get_sent(request: RequestBuilder, random_user_agent: &HeaderValue) -> Result<String, Error> {
+            let response = request
+                .header(reqwest::header::USER_AGENT, random_user_agent.clone())
+                .send()
+                .await
+                .map_err(|_err| Error::SendError)?;
+            let text = response
+                .text()
+                .await
+                .map_err(|_err| Error::ReadError)?;
+            
+            Ok(text)
+        }
+        
+        fn request_to_cache_path(request: RequestBuilder, cache_dir: &str) -> String {
+            let request = request.build().unwrap();
+
+            let method = request.method().to_string();
+            let url = request.url();
+            let host = url.host().unwrap();
+            let scheme = url.scheme();
+            let path = &url.path()[1..];
+            let query = match url.query() {
+                Some(query) => query.replace("&", "/"),
+                None => String::from("empty_query"),
+            };
+
+            format!("{cache_dir}/{host}/{method}/{scheme}/{path}/{query}/cache.data")
+        }
+
+        match CACHE_DIR {
+            Some(cache_dir) => {
+                let request_cache_path = request_to_cache_path(request.try_clone().unwrap(), cache_dir);
+
+                match std::fs::read_to_string(&request_cache_path) {
+                    Ok(contents) => Ok(contents),
+                    Err(err) => match err.kind() {
+                        std::io::ErrorKind::NotFound => {
+                            std::fs::create_dir_all(
+                                std::path::Path::new(&request_cache_path).parent().unwrap())
+                                .expect("Could not write to cache");
+                            let mut cache_file = std::fs::File::create(request_cache_path)
+                                .expect("Could not create cache file");
+                            let sent = get_sent(request, random_user_agent).await;
+                            if let Ok(sent) = sent {
+                                cache_file
+                                    .write_all(sent.as_bytes())
+                                    .expect("Could not write to cache file");
+                                Ok(sent)
+                            } else {
+                                sent
+                            }
+                        },
+                        _ => panic!("Could not read {request_cache_path}: {err}")
+                    }
+                }
+            },
+            None => get_sent(request, random_user_agent).await,
+        }
+    }
+
+}
+
 // http get
 
 use reqwest::RequestBuilder;
 
 pub async fn http_get_text(request: RequestBuilder) -> Result<String, Error> {
-    // TODO: reimplement caching
+    // TODO: reimplement sliding windows
     /* let url = Url::parse(&url).map_err(|_err| Error::UrlParseError)?;
 
     if let Some(cached) = CACHE.lock().unwrap().get(url.as_str().to_string()) {
@@ -171,19 +247,10 @@ pub async fn http_get_text(request: RequestBuilder) -> Result<String, Error> {
         return Err(Error::TooManyRequestsInWindow);
     } */
 
-    let user_agent = BROWSER_USER_AGENTS
+    let random_user_agent = BROWSER_USER_AGENTS
         .choose(&mut rand::thread_rng()).unwrap();
-    let response = request
-        .header(reqwest::header::USER_AGENT, user_agent)
-        .send()
-        .await
-        .map_err(|_err| Error::SendError)?;
-    let text = response
-        .text()
-        .await
-        .map_err(|_err| Error::ReadError)?;
+
+    cache::get_or_send(request, random_user_agent).await
 
     // CACHE.lock().unwrap().put(url.as_str().to_string(), text.clone());
-
-    Ok(text)
 }
