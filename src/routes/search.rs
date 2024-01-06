@@ -117,7 +117,7 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
                 results_vec.len(),
                 results_vec.into_iter()
                     .map(|entry| crate::include_static!("html/result.html",
-                        url = entry.0,
+                        url = entry.2.url,
                         title = entry.2.title,
                         snippet = entry.2.snippet
                         // TODO: engines = entry.1
