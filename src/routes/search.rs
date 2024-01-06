@@ -52,7 +52,7 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
         .collect::<Vec<_>>()
         .into_iter()
         .map(|result| {
-            format!(crate::include_static!("html/result.html"),
+            crate::include_static!("html/result.html",
                 url = result.url,
                 title = result.title,
                 snippet = result.snippet
@@ -61,8 +61,8 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
         .collect::<String>();
 
     HttpResponse::Ok()
-        .body(format!(crate::include_static!("html/search.html"),
-            query = query,
-            search_results = search_results
+        .body(crate::include_static!("html/search.html",
+            query,
+            search_results
         ))
 }

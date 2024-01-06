@@ -12,6 +12,14 @@ macro_rules! include_static {
     ($file:expr) => {
         include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/static/", $file))
     };
+
+    ($file:expr, $($var:ident), *) => {
+        format!(crate::include_static!($file), $($var = $var), *)
+    };
+    
+    ($file:expr, $($key:ident = $value:expr),*) => {
+        format!(crate::include_static!($file), $($key = $value), *)
+    };
 }
 
 #[actix_web::main]
