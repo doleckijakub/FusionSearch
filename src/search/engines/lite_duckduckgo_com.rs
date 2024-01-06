@@ -1,10 +1,13 @@
 use crate::search::{Query, SearchResult};
 
 use reqwest::{Client, RequestBuilder};
-use regex::Regex;
+use scraper::{Selector, Html};
 
 lazy_static::lazy_static! {
-    static ref RE: Regex = Regex::new(r#"<tr>\s*<td valign="top">.*?\.&nbsp;</td>\s*<td>\s*<a rel="nofollow" href="(.*?)" class='result-link'>(.*?)</a>\s*</td>\s*</tr>\s*<tr>\s*<td>&nbsp;&nbsp;&nbsp;</td>\s*<td class='result-snippet'>\s*(.*?)\s*</td>\s*</tr>"#).unwrap();
+    static ref RESULT_TABLE_SELECTOR: Selector = Selector::parse(r#"html > body > form > div.filters > table"#).unwrap();
+    static ref TR_ROWS_SELECTOR:      Selector = Selector::parse("tr:not(:last-child)").unwrap();
+    static ref A_TAG_SELECTOR:        Selector = Selector::parse("td a.result-link").unwrap();
+    static ref TD_CONTENT_SELECTOR:   Selector = Selector::parse("td.result-snippet").unwrap();
 }
 
 pub const URL: &str = "lite.duckduckgo.com";
@@ -17,16 +20,34 @@ pub fn request(request: Client, query: &Query) -> RequestBuilder {
 pub fn search_results(response: &String) -> Vec<SearchResult> {
     let mut results = Vec::new();
 
-    for capture in RE.captures_iter(&response) {
-        let url = capture[1].to_string();
-        let title = capture[2].to_string();
-        let snippet = capture[3].to_string();
+    let html = Html::parse_document(response);
 
-        results.push(SearchResult {
-            url,
-            title,
-            snippet
-        });
+    let result_table = html.select(&RESULT_TABLE_SELECTOR).last().unwrap();
+
+    let tr_rows = result_table.select(&TR_ROWS_SELECTOR).collect::<Vec<_>>();
+
+    let mut offset = 0;
+    while tr_rows.len() >= offset + 4 {
+        let tr_title = &tr_rows[offset];
+        let tr_content = &tr_rows[offset + 1];
+        offset += 4;
+
+        if tr_content.value().attr("class").unwrap_or("") == "result-sponsored" {
+            continue;
+        }
+
+        let a_tag = tr_title.select(&A_TAG_SELECTOR).next();
+        if let Some(a_tag) = a_tag {
+            let td_content = tr_content.select(&TD_CONTENT_SELECTOR).next();
+
+            if let Some(td_content) = td_content {
+                results.push(SearchResult {
+                    url: a_tag.value().attr("href").unwrap().to_string(),
+                    title: a_tag.text().collect(),
+                    snippet: td_content.text().collect(),
+                });
+            }
+        }
     }
 
     results
