@@ -10,7 +10,7 @@ lazy_static::lazy_static! {
     static ref TD_CONTENT_SELECTOR:   Selector = Selector::parse("td.result-snippet").unwrap();
 }
 
-pub const URL: &str = "lite.duckduckgo.com";
+pub const URL: &str = "duckduckgo.com";
 
 pub fn request(request: Client, query: &Query) -> RequestBuilder {
     request
