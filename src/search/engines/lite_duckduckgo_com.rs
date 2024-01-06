@@ -41,11 +41,11 @@ pub fn search_results(response: &String) -> Vec<SearchResult> {
             let td_content = tr_content.select(&TD_CONTENT_SELECTOR).next();
 
             if let Some(td_content) = td_content {
-                results.push(SearchResult {
-                    url: a_tag.value().attr("href").unwrap().to_string(),
-                    title: a_tag.text().collect(),
-                    snippet: td_content.text().collect(),
-                });
+                let url = a_tag.value().attr("href").unwrap().to_string();
+                let title = a_tag.text().collect();
+                let snippet = td_content.text().collect();
+
+                results.push(SearchResult { url, title, snippet });
             }
         }
     }
