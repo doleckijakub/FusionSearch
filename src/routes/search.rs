@@ -3,7 +3,8 @@ use crate::search::{
     Query, ActixQueryWrapper, SearchResult, http_get_text,
     engines::{
         duckduckgo_com,
-        bing_com
+        bing_com,
+        google_com,
     }
 };
 
@@ -46,8 +47,9 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
         )> = {
             let query = Query::from(&mut request);
             vec![
-                execute_search_engine!(&query, duckduckgo_com),
                 execute_search_engine!(&query, bing_com),
+                execute_search_engine!(&query, duckduckgo_com),
+                execute_search_engine!(&query, google_com),
             ]
         };
 
