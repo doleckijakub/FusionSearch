@@ -7,6 +7,8 @@ lazy_static::lazy_static! {
     static ref RE: Regex = Regex::new(r#"</span></span></div></div></div></a></div><h2><a href="(.*?)" h="(.*?)">(.*?)</a></h2><div class="b_caption" role="contentinfo"><p class="b_lineclamp. b_algoSlug"><span class="algoSlug_icon" data-priority="2">(.*?)</span>(.*?)</p></div></li>"#).unwrap();
 }
 
+pub const URL: &str = "bing.com";
+
 pub fn request(request: Client, query: &Query) -> RequestBuilder {
     request
         .get(format!("https://bing.com/search?q={}", query.query))

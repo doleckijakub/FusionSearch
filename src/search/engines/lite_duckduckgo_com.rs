@@ -7,6 +7,8 @@ lazy_static::lazy_static! {
     static ref RE: Regex = Regex::new(r#"<tr>\s*<td valign="top">.*?\.&nbsp;</td>\s*<td>\s*<a rel="nofollow" href="(.*?)" class='result-link'>(.*?)</a>\s*</td>\s*</tr>\s*<tr>\s*<td>&nbsp;&nbsp;&nbsp;</td>\s*<td class='result-snippet'>\s*(.*?)\s*</td>\s*</tr>"#).unwrap();
 }
 
+pub const URL: &str = "lite.duckduckgo.com";
+
 pub fn request(request: Client, query: &Query) -> RequestBuilder {
     request
         .get(format!("https://lite.duckduckgo.com/lite?q={}", query.query))

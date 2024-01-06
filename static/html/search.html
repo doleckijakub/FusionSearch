@@ -7,6 +7,17 @@
 		<form method="GET" action="search">
 			<input type="text" name="q">
 		</form>
+		<details open>
+			<summary>{search_summary}</summary>
+			<style>
+				details table tr :first-child {{
+					text-align: right;
+				}}
+			</style>
+			<table>
+				{search_details}
+			</table>
+		</details>
 		<main>
 			{search_results}
 		</main>

@@ -38,12 +38,32 @@ pub struct SearchResult {
 
 // Error
 
-#[derive(Debug)]
 pub enum Error {
     // UrlParseError,
     // TooManyRequestsInWindow,
     SendError,
     ReadError,
+    JoinError,
+    NoResultsError,
+}
+
+impl From<tokio::task::JoinError> for Error {
+    fn from(_: tokio::task::JoinError) -> Self {
+        Self::JoinError
+    }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let msg = match self {        
+            Error::SendError =>      "Failed to send request",
+            Error::ReadError =>      "Failed to read response",
+            Error::JoinError =>      "Failed to join thread",
+            Error::NoResultsError => "No results",
+        };
+
+        write!(f, "{}", msg)
+    }
 }
 
 // sliding windows
