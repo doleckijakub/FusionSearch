@@ -1,4 +1,3 @@
-
 use crate::search::{Query, SearchResult};
 
 use reqwest::{Client, RequestBuilder};
@@ -55,6 +54,10 @@ pub fn search_results(response: &String) -> Vec<SearchResult> {
                 if el_text.len() != 0 {
                     break;
                 }
+            }
+
+            if el_text.len() == 0 {
+                continue;
             }
 
             el_text
