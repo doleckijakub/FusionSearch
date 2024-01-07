@@ -79,7 +79,7 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
                 Ok(results) => {
                     let num_results = results.len();
 
-                    details.push_str(&crate::include_static!("html/details-success.html",
+                    details.push_str(&crate::html_snippet!("details-success.html",
                         url, num_results
                     ));
 
@@ -99,7 +99,7 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
                     results_total += num_results as u32;
                 },
                 Err(err) => {
-                    details.push_str(&crate::include_static!("html/details-error.html",
+                    details.push_str(&crate::html_snippet!("details-error.html",
                         url,
                         err
                     ));
@@ -119,7 +119,7 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
             (
                 results_vec.len(),
                 results_vec.into_iter()
-                    .map(|entry| crate::include_static!("html/result.html",
+                    .map(|entry| crate::html_snippet!("result.html",
                         engines = format!("<span>{}</span>", entry.1.join("</span><span>")),
                         pretty_url = str::replace(
                             &str::replace(&entry.2.url, "/", PRETTY_URL_PATH_SEP),
@@ -135,7 +135,7 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
         };
 
 
-        let summary = crate::include_static!("html/details-summary.html",
+        let summary = crate::html_snippet!("details-summary.html",
             results_total,
             results_unique,
             engine_count,
@@ -146,7 +146,7 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
     };
 
     HttpResponse::Ok()
-        .body(crate::include_static!("html/search.html",
+        .body(crate::html_snippet!("search.html",
             query,
             search_summary,
             search_details,

@@ -8,17 +8,17 @@ mod search;
 use actix_web::{web, App, HttpServer};
 
 #[macro_export]
-macro_rules! include_static {
+macro_rules! html_snippet {
     ($file:expr) => {
-        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/static/", $file))
+        include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/html_snippets/", $file))
     };
 
     ($file:expr, $($var:ident), *) => {
-        format!(crate::include_static!($file), $($var = $var), *)
+        format!(crate::html_snippet!($file), $($var = $var), *)
     };
     
     ($file:expr, $($key:ident = $value:expr),*) => {
-        format!(crate::include_static!($file), $($key = $value), *)
+        format!(crate::html_snippet!($file), $($key = $value), *)
     };
 }
 
