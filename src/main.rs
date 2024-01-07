@@ -28,6 +28,7 @@ async fn main() -> std::io::Result<()> {
 		App::new()
 			.route("/", web::get().to(crate::routes::index::response))
 			.route("/search", web::get().to(crate::routes::search::response))
+            .service(actix_files::Files::new("/static", "static").show_files_listing())
 	})
 	.bind("0.0.0.0:8080")?
 	.run()
