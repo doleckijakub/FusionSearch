@@ -12,6 +12,7 @@ use actix_web::HttpResponse;
 use reqwest::Client;
 
 const QUERY_PARAMETER_NAME: &str = "q";
+const PRETTY_URL_PATH_SEP: &str = " › ";
 
 use tokio::task::{self, JoinHandle};
 
@@ -119,10 +120,15 @@ pub async fn response(mut request: ActixQueryWrapper) -> HttpResponse {
                 results_vec.len(),
                 results_vec.into_iter()
                     .map(|entry| crate::include_static!("html/result.html",
+                        engines = format!("<span>{}</span>", entry.1.join("</span><span>")),
+                        pretty_url = str::replace(
+                            &str::replace(&entry.2.url, "/", PRETTY_URL_PATH_SEP),
+                            &format!("{c}{c}", c = PRETTY_URL_PATH_SEP),
+                            "//"
+                        ),
                         url = entry.2.url,
                         title = entry.2.title,
                         snippet = entry.2.snippet
-                        // TODO: engines = entry.1
                     ))
                     .collect::<String>()
             )
