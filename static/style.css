@@ -1,0 +1,29 @@
+html {
+	font-family: sans-serif;
+}
+
+details table tr :first-child {
+	text-align: right;
+}
+
+.result {
+	padding: 1rem;
+	display: block;
+	text-align: justify;
+}
+
+.engines {
+	font-size: .6rem;
+}
+
+.engines > span {
+	border: 1px solid blue;
+	border-radius: .6rem;
+	padding: 0 .3rem 0 .3rem;
+	margin: 0 .3rem 0 .3rem;
+}
+
+.title {
+	font-size: 1.2rem;
+	text-decoration: none;
+}
