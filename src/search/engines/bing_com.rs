@@ -44,7 +44,13 @@ pub fn search_results(response: &String) -> Vec<SearchResult> {
 
                     let encoded_url = format!("{}{}",
                         encoded_url,
-                        "=".repeat(((-(encoded_url.len() as i32)) % 4).try_into().unwrap())
+                        match encoded_url.len() % 4 {
+                            0 => "",
+                            1 => "===",
+                            2 => "==",
+                            3 => "=",
+                            n => panic!("Unhandled case: {}", n)
+                        }
                     );
 
                     if let Ok(decoded_url) = URL_SAFE.decode(encoded_url) {
