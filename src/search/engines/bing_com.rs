@@ -49,7 +49,7 @@ pub fn search_results(response: &String) -> Vec<SearchResult> {
                             1 => "===",
                             2 => "==",
                             3 => "=",
-                            n => panic!("Unhandled case: {}", n)
+                            n => panic!("Unreachable: {}", n)
                         }
                     );
 
