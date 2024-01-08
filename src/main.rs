@@ -26,8 +26,8 @@ macro_rules! html_snippet {
 async fn main() -> std::io::Result<()> {
 	HttpServer::new(|| {
 		App::new()
-			.route("/", web::get().to(crate::routes::index::response))
-			.route("/search", web::get().to(crate::routes::search::response))
+			.route("/", web::get().to(routes::index::response))
+			.route("/search", web::get().to(routes::search::response))
             .service(actix_files::Files::new("/static", "static").show_files_listing())
 	})
 	.bind("0.0.0.0:8080")?
